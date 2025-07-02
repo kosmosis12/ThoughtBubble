@@ -2,8 +2,6 @@
 
 ThoughtBubble is a sleek and intuitive note-taking application designed to help you capture, organize, and manage your thoughts instantly. Built with a modern tech stack, it provides a seamless user experience for creating to-do lists, jotting down project ideas, and saving meeting notes.
 
-![ThoughtBubble App Screenshot](https://i.imgur.com/8a6P2bJ.png)
-
 ---
 
 ## Features
