@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 
 import NoteList from './Components/NoteList.jsx';
@@ -8,6 +8,9 @@ import SearchBar from './Components/SearchBar.jsx';
 import ReminderModal from './Components/ReminderModal.jsx';
 import { categories } from './config.js';
 
+// Define the base URL for your API
+const API_URL = 'http://localhost:3001/api';
+
 const App = () => {
   const [notes, setNotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,20 +19,29 @@ const App = () => {
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [noteForReminder, setNoteForReminder] = useState(null);
 
-  useEffect(() => {
-    const fetchNotes = () => {
-      const initialNotes = [
-        { id: '1a2b3c4d', type: 'todo', content: 'Prep Q3 board slides - need to finalize revenue projections and competitive analysis', category: 'Personal To-Do', reminder: '0m', reminderTimestamp: null, completed: false },
-        { id: '5e6f7g8h', type: 'idea', content: 'New mobile app feature idea: voice notes integration with AI transcription', category: 'Project Idea', reminder: null, reminderTimestamp: null, completed: false },
-        { id: '9i0j1k2l', type: 'meeting', content: 'Follow up with Alex about design system implementation for Q4', category: 'Meeting Note', reminder: '29m', reminderTimestamp: null, completed: false }
-      ];
-      setNotes(initialNotes);
+  // Fetch all notes from the backend when the component mounts
+  const fetchNotes = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/notes`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setNotes(data.data); // The backend wraps notes in a "data" property
+    } catch (error) {
+      console.error("Failed to fetch notes:", error);
+      // Optionally, set an error state to show in the UI
+    } finally {
       setIsLoading(false);
-    };
-    setTimeout(fetchNotes, 1000);
+    }
   }, []);
 
-  const handleAddNote = (noteContent, categoryName) => {
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
+  // Add a new note by POSTing to the backend
+  const handleAddNote = async (noteContent, categoryName) => {
     const categoryDetails = categories.find(c => c.name === categoryName);
     const newNote = {
       id: crypto.randomUUID(),
@@ -38,36 +50,90 @@ const App = () => {
       category: categoryName,
       reminder: null,
       reminderTimestamp: null,
-      completed: false
+      completed: 0, // Use 0 for false as per database schema
+      timestamp: new Date().toISOString()
     };
-    setNotes([newNote, ...notes]);
+
+    try {
+      const response = await fetch(`${API_URL}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newNote)
+      });
+      if (!response.ok) throw new Error('Failed to add note');
+      // Re-fetch notes to get the latest list from the server
+      fetchNotes();
+    } catch (error) {
+      console.error("Error adding note:", error);
+    }
   };
 
-  const toggleNoteCompletion = (id) => {
-    setNotes(notes.map(note =>
-      note.id === id ? { ...note, completed: !note.completed } : note
-    ));
+  // Generic function to update a note via PATCH request
+  const updateNoteOnServer = async (id, updatedFields) => {
+    try {
+      const response = await fetch(`${API_URL}/notes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields)
+      });
+      if (!response.ok) throw new Error('Failed to update note');
+      return true;
+    } catch (error) {
+      console.error("Error updating note:", error);
+      return false;
+    }
   };
 
-  const handleDeleteNote = (id) => {
-    setNotes(notes.filter(note => note.id !== id));
-  };
-
-  const handleUpdateNote = (id, newContent) => {
-    setNotes(notes.map(note =>
-      note.id === id ? { ...note, content: newContent } : note
-    ));
-    setEditingNoteId(null);
+  // Toggle completion status
+  const toggleNoteCompletion = async (id) => {
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+    const success = await updateNoteOnServer(id, { completed: note.completed ? 0 : 1 });
+    if (success) {
+       setNotes(notes.map(n => n.id === id ? { ...n, completed: !n.completed } : n));
+    }
   };
   
-  const handleSetReminder = (noteId, minutes) => {
+  // Update note content
+  const handleUpdateNote = async (id, newContent) => {
+    const success = await updateNoteOnServer(id, { content: newContent });
+    if (success) {
+      setNotes(notes.map(note =>
+        note.id === id ? { ...note, content: newContent } : note
+      ));
+    }
+    setEditingNoteId(null);
+  };
+
+  // Set a reminder for a note
+  const handleSetReminder = async (noteId, minutes) => {
     const reminderTime = new Date(Date.now() + minutes * 60 * 1000);
-    setNotes(notes.map(note => 
-      note.id === noteId 
-        ? { ...note, reminder: `${minutes}m`, reminderTimestamp: reminderTime } 
-        : note
-    ));
+    const success = await updateNoteOnServer(noteId, {
+      reminder: `${minutes}m`,
+      reminderTimestamp: reminderTime.getTime() // Store as integer timestamp
+    });
+     if (success) {
+        setNotes(notes.map(note =>
+          note.id === noteId
+            ? { ...note, reminder: `${minutes}m`, reminderTimestamp: reminderTime.getTime() }
+            : note
+        ));
+     }
     setNoteForReminder(null);
+  };
+
+  // Delete a note
+  const handleDeleteNote = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/notes/${id}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Failed to delete note');
+      // Update state locally for immediate UI response
+      setNotes(notes.filter(note => note.id !== id));
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
   };
 
   const filteredNotes = notes.filter(note => {
