@@ -79,3 +79,32 @@ app.delete('/api/notes/:id', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// BACKGROUND JOB: Check for reminders
+setInterval(() => {
+  const now = new Date().getTime();
+  // Find notes with a reminderTimestamp that is past and not yet completed
+  const sql = "SELECT * FROM notes WHERE reminderTimestamp <= ? AND completed = 0 AND reminder IS NOT NULL";
+  
+  db.all(sql, [now], (err, rows) => {
+    if (err) {
+      console.error("Error fetching due reminders:", err.message);
+      return;
+    }
+    
+    rows.forEach(note => {
+      console.log(`Reminder for note: ${note.content}`);
+      // Here you could trigger a desktop notification, send an email, etc.
+      
+      // Mark the reminder as handled by setting reminder to null or completed to 1
+      const updateSql = "UPDATE notes SET reminder = NULL, reminderTimestamp = NULL WHERE id = ?";
+      db.run(updateSql, note.id, function(updateErr) {
+        if (updateErr) {
+          console.error(`Error updating note ${note.id} after reminder:`, updateErr.message);
+        } else {
+          console.log(`Reminder for note ${note.id} handled.`);
+        }
+      });
+    });
+  });
+}, 10000); // Check every 10 seconds, for instance

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Clock, Send, ChevronDown, CheckSquare, Lightbulb, FileText } from 'lucide-react';
+import { Send, ChevronDown, CheckSquare, Lightbulb, FileText } from 'lucide-react';
 import { categories } from '../config.js';
 
 const NewNoteForm = ({ onAddNote }) => {
@@ -16,7 +16,7 @@ const NewNoteForm = ({ onAddNote }) => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === 'Enter' && !e.ctrlKey) {
       e.preventDefault();
       handleAddNote();
     }
@@ -36,7 +36,7 @@ const NewNoteForm = ({ onAddNote }) => {
       <div className="bg-gray-800 rounded-lg p-4">
         <textarea
           ref={textareaRef}
-          placeholder="What's on your mind? (⌘+Enter to save)"
+          placeholder="What's on your mind?"
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           onKeyDown={handleKeyPress}
@@ -48,10 +48,10 @@ const NewNoteForm = ({ onAddNote }) => {
           <div className="relative">
             <button
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors"
             >
               <SelectedIcon size={16} className={categories.find(c => c.name === selectedCategory)?.color} />
-              <span className="text-sm">{selectedCategory}</span>
+              <span className="text-xs font-semibold tracking-wider uppercase">{selectedCategory}</span>
               <ChevronDown size={16} />
             </button>
             
@@ -69,7 +69,7 @@ const NewNoteForm = ({ onAddNote }) => {
                       className="flex items-center space-x-2 w-full px-3 py-2 hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
                     >
                       <Icon size={16} className={category.color} />
-                      <span className="text-sm">{category.name}</span>
+                      <span className="text-sm font-semibold uppercase tracking-wider">{category.name}</span>
                     </button>
                   );
                 })}
@@ -78,17 +78,12 @@ const NewNoteForm = ({ onAddNote }) => {
           </div>
           
           <div className="flex items-center space-x-2">
-            <button className="flex items-center space-x-2 px-3 py-1.5 text-gray-400 hover:text-white transition-colors">
-              <Clock size={16} />
-              <span className="text-sm">Remind</span>
-            </button>
-            
             <button
               onClick={handleAddNote}
-              className="flex items-center space-x-2 px-4 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-700/50 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
             >
-              <Send size={16} />
-              <span className="text-sm">Save</span>
+              <Send size={16} className="text-blue-400" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Save</span>
             </button>
           </div>
         </div>

@@ -25,25 +25,36 @@ const ReminderModal = ({ note, onSetReminder, onClose }) => {
         
         <p className="text-sm text-gray-400 mb-4 line-clamp-2">For: "{note.content}"</p>
 
-        <div className="space-y-3">
-          <button onClick={() => onSetReminder(note.id, 30)} className="w-full text-left px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors">
-            In 30 minutes
-          </button>
-          <button onClick={() => onSetReminder(note.id, 60)} className="w-full text-left px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors">
-            In 1 hour
-          </button>
-          
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              value={customMinutes}
-              onChange={(e) => setCustomMinutes(e.target.value)}
-              placeholder="Custom minutes..."
-              className="flex-grow px-4 py-2 bg-gray-900 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button onClick={handleSetCustom} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-md font-semibold">
-              Set
+        <div className="space-y-2">
+          {[
+            { label: 'In 20 minutes', minutes: 20 },
+            { label: 'In 1 hour', minutes: 60 },
+            { label: 'In 3 hours', minutes: 180 },
+            { label: 'Tomorrow', minutes: 1440 },
+            { label: 'Next week', minutes: 10080 },
+          ].map(({ label, minutes }) => (
+            <button
+              key={label}
+              onClick={() => onSetReminder(note.id, minutes)}
+              className="w-full text-left px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+            >
+              {label}
             </button>
+          ))}
+          
+          <div className="pt-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="number"
+                value={customMinutes}
+                onChange={(e) => setCustomMinutes(e.target.value)}
+                placeholder="Or custom minutes..."
+                className="flex-grow px-4 py-2 bg-gray-900 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button onClick={handleSetCustom} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-md font-semibold transition-colors">
+                Set Custom
+              </button>
+            </div>
           </div>
         </div>
       </div>

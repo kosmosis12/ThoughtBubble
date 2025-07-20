@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 import NoteList from './Components/NoteList.jsx';
 import NewNoteForm from './Components/NewNoteForm.jsx';
 import FilterTabs from './Components/FilterTabs.jsx';
-import SearchBar from './Components/SearchBar.jsx';
 import ReminderModal from './Components/ReminderModal.jsx';
 import { categories } from './config.js';
 
@@ -145,19 +144,18 @@ const App = () => {
   return (
     <>
       <div className="w-full max-w-2xl mx-auto bg-gray-900 text-white rounded-lg shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-lg">TB</div>
-            <div>
-              <h1 className="text-xl font-semibold">ThoughtBubble</h1>
-              <p className="text-sm text-gray-400">Capture thoughts instantly</p>
-            </div>
-          </div>
-          <button aria-label="Close" className="text-gray-400 hover:text-white transition-colors"><X size={24} /></button>
+        <div className="relative flex justify-center items-center p-4 border-b border-gray-800">
+            <h1 className="text-2xl font-light tracking-wider text-gray-100">ThoughtBubble</h1>
+          <button aria-label="Close" className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"><X size={24} /></button>
         </div>
 
-        <SearchBar query={searchQuery} onSearch={setSearchQuery} />
-        <FilterTabs activeFilter={activeFilter} onSetFilter={setActiveFilter} noteCount={notes.length} />
+        <FilterTabs 
+          activeFilter={activeFilter} 
+          onSetFilter={setActiveFilter} 
+          searchQuery={searchQuery}
+          onSearch={setSearchQuery}
+          noteCount={notes.length} 
+        />
         <NewNoteForm onAddNote={handleAddNote} />
 
         <div className="px-4 pb-4 max-h-96 overflow-y-auto">

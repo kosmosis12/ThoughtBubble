@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Clock, CheckSquare, Lightbulb, FileText, Trash2, Pencil } from 'lucide-react';
 import { categories } from '../config.js';
 
-const NoteItem = ({ note, onToggleComplete, onDeleteNote, onUpdateNote, editingNoteId, setEditingNoteId }) => {
+const NoteItem = ({ note, onToggleComplete, onDeleteNote, onUpdateNote, editingNoteId, setEditingNoteId, onOpenReminderModal }) => {
   const [editedContent, setEditedContent] = useState(note.content);
   
   const isEditing = editingNoteId === note.id;
@@ -44,15 +44,19 @@ const NoteItem = ({ note, onToggleComplete, onDeleteNote, onUpdateNote, editingN
           role="checkbox"
           aria-checked={note.completed}
           aria-label={`Mark note as ${note.completed ? 'incomplete' : 'complete'}`}
-          className="mt-1 flex-shrink-0"
+          className={`mt-1 flex-shrink-0 transition-opacity ${
+            note.completed ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
         >
           <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
             note.completed ? 'bg-blue-600 border-blue-600' : 'border-gray-600 hover:border-gray-500'
           } transition-colors`}>
-            {note.completed && (
+            {note.completed ? (
               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
+            ) : (
+              <div className="w-1.5 h-1.5 bg-gray-500 rounded-full"></div>
             )}
           </div>
         </button>
@@ -60,7 +64,7 @@ const NoteItem = ({ note, onToggleComplete, onDeleteNote, onUpdateNote, editingN
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
             <CategoryIcon size={14} className={categoryDetails?.color || 'text-gray-400'} />
-            <span className="text-xs text-gray-400">{note.category}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">{note.category}</span>
             {note.reminder && (
               <>
                 <Clock size={12} className="text-yellow-500" />
@@ -73,10 +77,17 @@ const NoteItem = ({ note, onToggleComplete, onDeleteNote, onUpdateNote, editingN
             {note.content}
           </p>
           
-          <p className="text-xs text-gray-500 mt-2">{note.timestamp}</p>
+          <p className="text-xs text-gray-500 mt-2">{new Date(note.timestamp).toLocaleString()}</p>
         </div>
 
         <div className="flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={() => onOpenReminderModal(note)}
+            className="text-gray-600 hover:text-yellow-400"
+            aria-label="Set reminder"
+          >
+            <Clock size={16} />
+          </button>
           <button 
             onClick={() => setEditingNoteId(note.id)}
             className="text-gray-600 hover:text-blue-400"
